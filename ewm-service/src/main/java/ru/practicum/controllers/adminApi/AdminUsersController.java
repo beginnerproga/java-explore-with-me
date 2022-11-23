@@ -2,7 +2,6 @@ package ru.practicum.controllers.adminApi;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.UserDto;
@@ -38,9 +37,7 @@ public class AdminUsersController {
     }
 
     @GetMapping
-    public List<UserDto> getUsers( @PositiveOrZero @RequestParam(name = "from", defaultValue = "0", required = false) Integer from,
-                             @Positive @RequestParam(name = "size", defaultValue = "10", required = false) Integer size,
-                             @RequestParam(name = "ids", required = false) List<Long> ids) {
+    public List<UserDto> getUsers(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0", required = false) Integer from, @Positive @RequestParam(name = "size", defaultValue = "10", required = false) Integer size, @RequestParam(name = "ids", required = false) List<Long> ids) {
 
         return userService.getUsers(ids, from, size);
     }
