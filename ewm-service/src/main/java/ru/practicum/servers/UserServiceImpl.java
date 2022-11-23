@@ -54,15 +54,15 @@ public class UserServiceImpl implements UserService {
         List<UserDto> result;
         if (ids != null && ids.size() != 0) {
             log.info("Received request to get all users by userIds={}", ids);
-            result = userRepository.findAllByIdInOrderById(ids).stream().
-                    map(x -> UserMapper.toUserDto(x)).collect(Collectors.toList());
+            result = userRepository.findAllByIdInOrderById(ids).stream()
+                    .map(x -> UserMapper.toUserDto(x)).collect(Collectors.toList());
 
         } else {
             log.info("Received request to get all users", ids);
             int page = from / size;
             Pageable pageable = PageRequest.of(page, size);
-            result = userRepository.findAll(pageable).get().
-                    map(x -> UserMapper.toUserDto(x)).collect(Collectors.toList());
+            result = userRepository.findAll(pageable).get()
+                    .map(x -> UserMapper.toUserDto(x)).collect(Collectors.toList());
         }
         return result;
     }
