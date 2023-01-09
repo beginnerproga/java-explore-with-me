@@ -60,8 +60,7 @@ public class EventServiceImpl implements EventService {
         });
         Category category = null;
         if (eventDto.getCategoryId() != null && eventDto.getCategoryId() != 0)
-            category = categoryRepository.findById(eventDto.getCategoryId()).orElseThrow(() ->
-            {
+            category = categoryRepository.findById(eventDto.getCategoryId()).orElseThrow(() -> {
                 throw new CategoryNotFoundException("Category with id = " + eventDto.getCategoryId() + " not found");
             });
         Event event = EventMapper.toEvent(eventDto, user, category);
@@ -323,8 +322,8 @@ public class EventServiceImpl implements EventService {
                             .collect(Collectors.toList());
                     break;
                 case VIEWS:
-                    events = events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed()).
-                            collect(Collectors.toList());
+                    events = events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed())
+                            .collect(Collectors.toList());
                     break;
             }
         } else

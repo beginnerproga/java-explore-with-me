@@ -18,7 +18,8 @@ public class Compilation {
     @JoinTable(name = "compilations_events",
             joinColumns = {@JoinColumn(name = "compilation_id")},
             inverseJoinColumns = {@JoinColumn(name = "event_id")})
-    private List<Event> events;
+    private List<Event> events = new ArrayList<>();
+    ;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,9 +27,4 @@ public class Compilation {
     private String title;
     @Column(name = "pinned")
     private Boolean pinned;
-
-    {
-        events = new ArrayList<>();
-    }
-
 }
