@@ -1,4 +1,4 @@
 package ru.practicum.util;
 
-public class Update {
+public interface Update {
 }

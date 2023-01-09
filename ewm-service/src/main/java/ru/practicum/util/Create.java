@@ -1,4 +1,4 @@
 package ru.practicum.util;
 
-public class Create {
+public interface Create {
 }

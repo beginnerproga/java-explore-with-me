@@ -1,35 +1,50 @@
 package ru.practicum.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.models.Location;
+import ru.practicum.util.Create;
+import ru.practicum.util.Update;
+import ru.practicum.util.validator.TimeNotEarlyNow;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventDto {
-    private long id;
-    @NotNull
-    @NotBlank
+    @JsonProperty("eventId")
+    @NotNull(groups = Update.class)
+    private Long id;
+    @NotNull(groups = Create.class)
+    @NotBlank(groups = Create.class)
+    @Size(max = 1000)
     private String annotation;
-    @NotNull
-    private CategoryDto category;
-    @NotNull
-    @NotBlank
+    @NotNull(groups = {Create.class})
+    @JsonProperty("category")
+    private Long categoryId;
+    @NotEmpty(groups = {Create.class})
+    @NotBlank(groups = {Create.class})
+    @Size(max = 1000)
     private String description;
-    @NotNull
+    @NotNull(groups = {Create.class})
+    @TimeNotEarlyNow
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
-    @NotNull
+    @NotNull(groups = {Create.class})
     private Location location;
     private Boolean paid;
     private Long participantLimit;
     private Boolean requestModeration;
-    @NotNull
-    @NotBlank
+    @NotEmpty(groups = {Create.class})
+    @NotBlank(groups = {Create.class})
+    @Size(max = 100)
     private String title;
 }
