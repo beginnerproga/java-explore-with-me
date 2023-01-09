@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.UserDto;
 import ru.practicum.servers.UserService;
-import ru.practicum.servers.UserServiceImpl;
+import ru.practicum.servers.impl.UserServiceImpl;
 import ru.practicum.util.Create;
 
 import javax.validation.constraints.Positive;
@@ -37,8 +37,9 @@ public class AdminUsersController {
     }
 
     @GetMapping
-    public List<UserDto> getUsers(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0", required = false) Integer from, @Positive @RequestParam(name = "size", defaultValue = "10", required = false) Integer size, @RequestParam(name = "ids", required = false) List<Long> ids) {
-
+    public List<UserDto> getUsers(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0", required = false) Integer from,
+                                  @Positive @RequestParam(name = "size", defaultValue = "10", required = false) Integer size,
+                                  @RequestParam(name = "ids", required = false) List<Long> ids) {
         return userService.getUsers(ids, from, size);
     }
 }
