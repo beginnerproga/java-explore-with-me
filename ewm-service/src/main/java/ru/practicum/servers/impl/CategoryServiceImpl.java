@@ -66,8 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(long catId) {
         log.info("Received request to delete a user by userId={}", catId);
-        Category category = categoryRepository.findById(catId).orElseThrow(() ->
-        {
+        Category category = categoryRepository.findById(catId).orElseThrow(() -> {
             throw new CategoryNotFoundException("Category with id = " + catId + " not found");
         });
         categoryRepository.delete(category);

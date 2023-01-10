@@ -74,8 +74,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             throw new UserNotFoundException("User with id = " + userId + " not found");
         });
         List<ParticipationRequest> participationRequests = participationRequestRepository.findAllByRequester(user);
-        return participationRequests.stream().map(ParticipationRequestMapper::toParticipationRequestDto).
-                collect(Collectors.toList());
+        return participationRequests.stream().map(ParticipationRequestMapper::toParticipationRequestDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -91,8 +91,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (!participationRequest.getRequester().equals(user))
             throw new UserNotAccessException("User cannot to cancel participation request");
         if (participationRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
-            Event event = eventRepository.findById(participationRequest.getEvent().getId()).orElseThrow(() ->
-            {
+            Event event = eventRepository.findById(participationRequest.getEvent().getId()).orElseThrow(() -> {
                 throw new EventNotFoundException("Event with this id not found");
             });
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);

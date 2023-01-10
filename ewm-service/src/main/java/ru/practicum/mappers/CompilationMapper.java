@@ -14,7 +14,7 @@ public class CompilationMapper {
     }
 
     public static CompilationInfoDto toCompilationInfoDto(Compilation compilation) {
-        return new CompilationInfoDto(compilation.getId(), compilation.getTitle(), compilation.getPinned(), compilation.getEvents().stream().map(EventMapper::toEventInfoDto).
-                collect(Collectors.toList()));
+        return new CompilationInfoDto(compilation.getId(), compilation.getTitle(), compilation.getPinned(), compilation.getEvents().stream().map(EventMapper::toEventInfoDto)
+                .collect(Collectors.toList()));
     }
 }

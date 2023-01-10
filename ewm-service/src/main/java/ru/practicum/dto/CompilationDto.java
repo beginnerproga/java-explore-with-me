@@ -22,13 +22,7 @@ public class CompilationDto {
     @Size(max = 100, groups = {Create.class})
     private String title;
     @NotNull(groups = {Create.class})
-    private Boolean pinned;
+    private Boolean pinned = false;
     @NotNull(groups = {Create.class})
-    private List<Long> events;
-
-    {
-        events = new ArrayList<>();
-        pinned = false;
-    }
-
+    private List<Long> events = new ArrayList<>();
 }
