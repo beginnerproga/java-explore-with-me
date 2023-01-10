@@ -19,7 +19,6 @@ public class Compilation {
             joinColumns = {@JoinColumn(name = "compilation_id")},
             inverseJoinColumns = {@JoinColumn(name = "event_id")})
     private List<Event> events = new ArrayList<>();
-    ;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
