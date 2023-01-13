@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.info.EventInfoDto;
@@ -47,7 +46,7 @@ public class PrivateEventsController {
     }
 
     @GetMapping("/{eventId}")
-    public EventInfoDto getEventById(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest httpServletRequest) {
+    public EventInfoDto getEventById(@PathVariable long userId, @PathVariable long eventId) {
         return eventService.getEventById(userId, eventId);
     }
 
