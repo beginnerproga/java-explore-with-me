@@ -60,14 +60,4 @@ public class PublicEventsController {
         eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
         return eventInfoDto;
     }
-
-    @GetMapping("/rating/top")
-    public List<EventShortInfoDto> getEventsByRatingOfEvent(@RequestParam(required = false, defaultValue = "15") @Positive int count,
-                                                            @RequestParam(required = false, defaultValue = "true") boolean desc, @RequestParam(required = false, defaultValue = "true") boolean eventRating) {
-        List<EventShortInfoDto> eventShortInfoDtos = eventService.getEventsByRating(count, desc, eventRating);
-        for (EventShortInfoDto eventShortInfoDto : eventShortInfoDtos)
-            eventShortInfoDto.setViews(statisticClient.getStats(eventShortInfoDto.getId()));
-        return eventShortInfoDtos;
-    }
-
 }
