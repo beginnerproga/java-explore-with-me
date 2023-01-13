@@ -33,5 +33,4 @@ public class EventShortInfoDto {
     private boolean paid;
     @PositiveOrZero
     private long views;
-    private Long rating;
 }

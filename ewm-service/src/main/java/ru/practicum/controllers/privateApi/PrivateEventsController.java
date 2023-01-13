@@ -8,7 +8,6 @@ import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.info.EventInfoDto;
-import ru.practicum.info.LikeInfoDto;
 import ru.practicum.servers.EventService;
 import ru.practicum.util.Create;
 import ru.practicum.util.Update;
@@ -82,16 +81,5 @@ public class PrivateEventsController {
     public ParticipationRequestDto rejectRequestByRequestId(@PathVariable long userId, @PathVariable long eventId, @PathVariable(name = "reqId") long requestId) {
         return eventService.rejectRequestByRequestId(userId, eventId, requestId);
     }
-
-    @PostMapping("/{eventId}/like")
-    public LikeInfoDto addLikeToEvent(@PathVariable long userId, @PathVariable long eventId) {
-        return eventService.addLikeToEvent(userId, eventId, true);
-    }
-
-    @PostMapping("/{eventId}/dislike")
-    public LikeInfoDto addDislikeToEvent(@PathVariable long userId, @PathVariable long eventId) {
-        return eventService.addLikeToEvent(userId, eventId, false);
-    }
-
 }
 

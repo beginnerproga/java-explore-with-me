@@ -40,7 +40,4 @@ public interface EventService {
 
     List<EventShortInfoDto> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, EventSort sort, int from, int size);
 
-    LikeInfoDto addLikeToEvent(long userId, long eventId, boolean isLlike);
-
-    List<EventShortInfoDto> getEventsByRating(int count, boolean desc, boolean eventRating);
 }
