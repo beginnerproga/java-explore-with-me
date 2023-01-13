@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface StatisticClient {
     void addEndpointHit(HttpServletRequest request);
+
     Long getStats(long eventId);
 
 }

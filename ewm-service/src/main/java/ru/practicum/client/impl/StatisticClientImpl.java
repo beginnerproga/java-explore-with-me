@@ -1,15 +1,13 @@
 package ru.practicum.client.impl;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.stereotype.Service;
+import ru.practicum.client.Hit;
 import ru.practicum.client.StatisticClient;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,16 +19,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
-@Data
-@AllArgsConstructor
-class Hit {
-    private String app;
-    private String uri;
-    private String ip;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timestamp;
-}
 
 @Service
 public class StatisticClientImpl implements StatisticClient {
