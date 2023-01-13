@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.exceptions.InappropriateStateForAction;
@@ -42,14 +43,16 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final StatisticClient statisticClient;
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository,
-                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository) {
+                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository, StatisticClient statisticClient) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.participationRequestRepository = participationRequestRepository;
+        this.statisticClient = statisticClient;
     }
 
     @Override
@@ -167,11 +170,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventInfoDto getEventById(long eventId) {
         log.info("Received request to get event with event's id = {} from public controller", eventId);
         Event event = eventRepository.findByIdAndStateOrderById(eventId, EventState.PUBLISHED);
         if (event == null)
             throw new EventNotFoundException("Published event with id = " + eventId + " not found");
+        event.setViews(statisticClient.getStats(eventId));
+        eventRepository.save(event);
         return EventMapper.toEventInfoDto(event);
     }
 

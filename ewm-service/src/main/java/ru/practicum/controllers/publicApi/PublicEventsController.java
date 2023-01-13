@@ -46,18 +46,13 @@ public class PublicEventsController {
                                                 HttpServletRequest request) {
         log.info("Send request to static client to add EndpointHit");
         statisticClient.addEndpointHit(request);
-        List<EventShortInfoDto> eventShortInfoDtos = eventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
-        for (EventShortInfoDto eventShortInfoDto : eventShortInfoDtos)
-            eventShortInfoDto.setViews(statisticClient.getStats(eventShortInfoDto.getId()));
-        return eventShortInfoDtos;
+        return eventService.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
     }
 
     @GetMapping("/{id}")
     public EventInfoDto getEventById(@PathVariable("id") long eventId, HttpServletRequest request) {
         log.info("Send request to static client to add EndpointHit");
         statisticClient.addEndpointHit(request);
-        EventInfoDto eventInfoDto = eventService.getEventById(eventId);
-        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
-        return eventInfoDto;
+        return eventService.getEventById(eventId);
     }
 }

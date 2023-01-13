@@ -24,12 +24,10 @@ import java.util.List;
 @Validated
 public class PrivateEventsController {
     private final EventService eventService;
-    private final StatisticClient statisticClient;
 
     @Autowired
-    public PrivateEventsController(EventService eventService, StatisticClient statisticClient) {
+    public PrivateEventsController(EventService eventService) {
         this.eventService = eventService;
-        this.statisticClient = statisticClient;
     }
 
     @PostMapping
@@ -39,32 +37,23 @@ public class PrivateEventsController {
 
     @PatchMapping
     public EventInfoDto updateEvent(@PathVariable long userId, @RequestBody @Validated({Update.class}) EventDto eventDto) {
-        EventInfoDto eventInfoDto = eventService.updateEvent(userId, eventDto);
-        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
-        return eventInfoDto;
+        return eventService.updateEvent(userId, eventDto);
     }
 
     @GetMapping
     public List<EventInfoDto> getEvents(@PathVariable long userId, @PositiveOrZero @RequestParam(name = "from", defaultValue = "0", required = false) Integer from,
                                         @Positive @RequestParam(name = "size", defaultValue = "10", required = false) Integer size) {
-        List<EventInfoDto> eventInfoDtos = eventService.getEvents(userId, from, size);
-        for (EventInfoDto eventInfoDto : eventInfoDtos)
-            eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
-        return eventInfoDtos;
+        return eventService.getEvents(userId, from, size);
     }
 
     @GetMapping("/{eventId}")
     public EventInfoDto getEventById(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest httpServletRequest) {
-        EventInfoDto eventInfoDto = eventService.getEventById(userId, eventId);
-        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
-        return eventInfoDto;
+        return eventService.getEventById(userId, eventId);
     }
 
     @PatchMapping("/{eventId}")
     public EventInfoDto cancelEvent(@PathVariable long userId, @PathVariable long eventId) {
-        EventInfoDto eventInfoDto = eventService.cancelEvent(userId, eventId);
-        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
-        return eventInfoDto;
+        return eventService.cancelEvent(userId, eventId);
     }
 
     @GetMapping("/{eventId}/requests")
