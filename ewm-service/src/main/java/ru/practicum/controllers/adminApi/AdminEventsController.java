@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.info.EventInfoDto;
 import ru.practicum.models.EventState;
@@ -21,10 +22,13 @@ import java.util.List;
 @Validated
 public class AdminEventsController {
     private final EventService eventService;
+    private final StatisticClient statisticClient;
+
 
     @Autowired
-    public AdminEventsController(EventService eventService) {
+    public AdminEventsController(EventService eventService, StatisticClient statisticClient) {
         this.eventService = eventService;
+        this.statisticClient = statisticClient;
     }
 
     @GetMapping
@@ -36,21 +40,30 @@ public class AdminEventsController {
                                            @RequestParam(name = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
                                            @RequestParam(name = "size", defaultValue = "10", required = false) @Positive int size) {
 
-        return eventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        List<EventInfoDto> eventInfoDtos = eventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        for (EventInfoDto eventInfoDto : eventInfoDtos)
+            eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
+        return eventInfoDtos;
     }
 
     @PutMapping("/{eventId}")
     public EventInfoDto updateEvent(@PathVariable long eventId, @RequestBody @Validated EventDto eventDto) {
-        return eventService.updateEvent(eventDto, eventId);
+        EventInfoDto eventInfoDto = eventService.updateEvent(eventDto, eventId);
+        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
+        return eventInfoDto;
     }
 
     @PatchMapping("/{eventId}/publish")
     public EventInfoDto publishEvent(@PathVariable long eventId) {
-        return eventService.publishEvent(eventId);
+        EventInfoDto eventInfoDto = eventService.publishEvent(eventId);
+        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
+        return eventInfoDto;
     }
 
     @PatchMapping("/{eventId}/reject")
     public EventInfoDto rejectEvent(@PathVariable long eventId) {
-        return eventService.rejectEvent(eventId);
+        EventInfoDto eventInfoDto = eventService.rejectEvent(eventId);
+        eventInfoDto.setViews(statisticClient.getStats(eventInfoDto.getId()));
+        return eventInfoDto;
     }
 }

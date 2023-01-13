@@ -10,10 +10,7 @@ import ru.practicum.util.Create;
 import ru.practicum.util.Update;
 import ru.practicum.util.validator.TimeNotEarlyNow;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -41,6 +38,7 @@ public class EventDto {
     @NotNull(groups = {Create.class})
     private Location location;
     private Boolean paid;
+    @PositiveOrZero(groups = {Create.class, Update.class})
     private Long participantLimit;
     private Boolean requestModeration;
     @NotEmpty(groups = {Create.class})

@@ -7,9 +7,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.exceptions.InappropriateStateForAction;
+import ru.practicum.exceptions.LikeAlreadySetException;
 import ru.practicum.exceptions.UserNotAccessException;
 import ru.practicum.exceptions.exception404.CategoryNotFoundException;
 import ru.practicum.exceptions.exception404.EventNotFoundException;
@@ -17,13 +19,12 @@ import ru.practicum.exceptions.exception404.RequestNotFoundException;
 import ru.practicum.exceptions.exception404.UserNotFoundException;
 import ru.practicum.info.EventInfoDto;
 import ru.practicum.info.EventShortInfoDto;
+import ru.practicum.info.LikeInfoDto;
 import ru.practicum.mappers.EventMapper;
+import ru.practicum.mappers.LikeMapper;
 import ru.practicum.mappers.ParticipationRequestMapper;
 import ru.practicum.models.*;
-import ru.practicum.repositories.CategoryRepository;
-import ru.practicum.repositories.EventRepository;
-import ru.practicum.repositories.ParticipationRequestRepository;
-import ru.practicum.repositories.UserRepository;
+import ru.practicum.repositories.*;
 import ru.practicum.servers.EventService;
 
 import javax.validation.ValidationException;
@@ -42,13 +43,19 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final LikeRepository likeRepository;
+    private final VisitRepository visitRepository;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository) {
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository,
+                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository,
+                            LikeRepository likeRepository, VisitRepository visitRepository, StatisticClient statisticClient) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.participationRequestRepository = participationRequestRepository;
+        this.likeRepository = likeRepository;
+        this.visitRepository = visitRepository;
     }
 
     @Override
@@ -150,6 +157,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventInfoDto getEventById(long userId, long eventId) {
         log.info("Received request to get event with event's id = {} by user with user's id = {}", eventId, userId);
         User user = userRepository.findById(userId).orElseThrow(() -> {
@@ -161,18 +169,17 @@ public class EventServiceImpl implements EventService {
         });
         if (!event.getInitiator().equals(user))
             throw new UserNotAccessException("User with id = " + userId + " is not owner");
+        log.info("Add visit from user with id = {} to event with id ={}", userId, eventId);
+        visitRepository.save(new Visit(null, event, user));
         return EventMapper.toEventInfoDto(event);
     }
 
     @Override
-    @Transactional
     public EventInfoDto getEventById(long eventId) {
-        log.info("Received request to get event with event's id = {} from public controller");
+        log.info("Received request to get event with event's id = {} from public controller", eventId);
         Event event = eventRepository.findByIdAndStateOrderById(eventId, EventState.PUBLISHED);
         if (event == null)
             throw new EventNotFoundException("Published event with id = " + eventId + " not found");
-        event.setViews(event.getViews() + 1);
-        eventRepository.save(event);
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -328,8 +335,61 @@ public class EventServiceImpl implements EventService {
             }
         } else
             events.stream().sorted(Comparator.comparingLong(Event::getId)).collect(Collectors.toList());
+
         return events.stream().map(EventMapper::toEventShortInfoDto).collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive) {
+        log.info("Received request to add like to event with id = {} from user with id = {}", eventId, userId);
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            throw new UserNotFoundException("User with id = " + userId + " not found");
+        });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            throw new EventNotFoundException("Event with id = " + eventId + " not found");
+        });
+        if (user.equals(event.getInitiator()))
+            throw new UserNotAccessException("User with id = " + userId + " is initiator of event");
+        if (visitRepository.findByEventAndUser(event, user) == null) {
+            throw new UserNotAccessException("User with id = " + userId +
+                    " doesn't visit the event with id = " + eventId);
+        }
+        if (likeRepository.findByUserAndEvent(user, event) != null)
+            throw new LikeAlreadySetException("User with id = " + userId + "already set like");
+        Like like = new Like(null, event, user, positive);
+        likeRepository.save(like);
+        if (positive) {
+            event.setRating(event.getRating() + 1);
+            event.getInitiator().setRating(event.getInitiator().getRating() + 1);
+        } else {
+            event.setRating(event.getRating() - 1);
+            event.getInitiator().setRating(event.getInitiator().getRating() - 1);
+        }
+        eventRepository.save(event);
+        userRepository.save(event.getInitiator());
+        return LikeMapper.toLikeInfoDto(like);
+    }
+
+    @Override
+    public List<EventShortInfoDto> getEventsByRating(int count, boolean desc, boolean eventRating) {
+        log.info("Received request to get events by rating");
+        List<Event> events;
+        Pageable page = PageRequest.of(0, count);
+        if (eventRating) {
+            if (desc)
+                events = eventRepository.findTopCountByOrderByRatingEventDesc(page);
+            else
+                events = eventRepository.findTopCountByOrderByRatingEventAsc(page);
+        } else {
+            if (desc)
+                events = eventRepository.findTopCountByOrderByRatingUserDesc(page);
+            else
+                events = eventRepository.findTopCountByOrderByRatingUserAsc(page);
+        }
+        return events.stream().map(EventMapper::toEventShortInfoDto).collect(Collectors.toList());
+    }
+
 
     @Transactional
     public void rejectAllPendingParticipationRequestsOfEvent(long eventId) {

@@ -6,11 +6,11 @@ import ru.practicum.models.User;
 
 public class UserMapper {
     public static UserDto toUserDto(User user) {
-        return new UserDto(user.getId(), user.getName(), user.getEmail());
+        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRating());
     }
 
     public static User toUser(UserDto userDto) {
-        return new User(null, userDto.getName(), userDto.getEmail());
+        return new User(null, userDto.getName(), userDto.getEmail(), userDto.getRating());
     }
 
     public static UserShortDto toUserShortDto(User user) {

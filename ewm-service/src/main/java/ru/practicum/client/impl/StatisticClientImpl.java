@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.StatisticClient;
 
@@ -18,14 +19,34 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@Data
+@AllArgsConstructor
+class Hit {
+    private String app;
+    private String uri;
+    private String ip;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timestamp;
+}
 
 @Service
 public class StatisticClientImpl implements StatisticClient {
-    private final String app = "ewm-service"; //Название сервиса
     private final String url;//URI сервиса
 
     public StatisticClientImpl(@Value("${explore-with-me-stats-service.url}") String url) {
         this.url = url;
+    }
+
+    public static String toRequestParam(Map<String, String> data) {
+        StringBuilder string = new StringBuilder("?");
+        for (Map.Entry<String, String> a : data.entrySet()) {
+            string.append(a.getKey()).append("=").append(a.getValue()).append("&");
+        }
+        string.delete(string.length() - 1, string.length());
+        return string.toString();
     }
 
     @Override
@@ -35,6 +56,8 @@ public class StatisticClientImpl implements StatisticClient {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+        //Название сервиса
+        String app = "ewm-service";
         Hit hit = new Hit(
                 app,
                 request.getRequestURI(),
@@ -53,14 +76,28 @@ public class StatisticClientImpl implements StatisticClient {
         httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString());
     }
 
-    @Data
-    @AllArgsConstructor
-    private static class Hit {
-        private String app;
-        private String uri;
-        private String ip;
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-        private LocalDateTime timestamp;
+    @Override
+    @SneakyThrows
+    public Long getStats(long eventId) {
+        Map<String, String> data = new HashMap<>();
+        data.put("start", "2023-01-10+11:30:35");
+        data.put("end", "2050-01-01+12:00:00");
+        data.put("uris", "/events/" + eventId);
+        data.put("unique", "false");
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(url + "/stats" + toRequestParam(data)))
+                .GET()
+                .header("Accept", "application/json")
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        JSONArray json = new JSONArray(response.body());
+        if (json.length() != 0) {
+            return json.getJSONObject(0).getLong("hits");
+        } else return 0L;
     }
 
 }
+
+
