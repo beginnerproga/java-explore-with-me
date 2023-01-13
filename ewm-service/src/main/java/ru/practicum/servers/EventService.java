@@ -4,7 +4,6 @@ import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.info.EventInfoDto;
 import ru.practicum.info.EventShortInfoDto;
-import ru.practicum.info.LikeInfoDto;
 import ru.practicum.models.EventSort;
 import ru.practicum.models.EventState;
 
