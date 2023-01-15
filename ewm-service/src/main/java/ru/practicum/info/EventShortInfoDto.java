@@ -32,5 +32,5 @@ public class EventShortInfoDto {
     private UserShortDto initiator;
     private boolean paid;
     @PositiveOrZero
-    private long views;
+    private Long views;
 }

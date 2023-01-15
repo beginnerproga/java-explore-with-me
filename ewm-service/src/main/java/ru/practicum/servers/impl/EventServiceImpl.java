@@ -152,15 +152,17 @@ public class EventServiceImpl implements EventService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
         List<Event> events = eventRepository.findAllByInitiatorOrderById(user, pageable).getContent();
-        List<Long> ids = new ArrayList<>();
-        HashMap<Long, Event> mapEvents = new HashMap<>();
-        for (Event event : events) {
-            ids.add(event.getId());
-            mapEvents.put(event.getId(), event);
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
         }
-        Map<Long, Long> answer = statisticClient.getStats(ids);
-        for (Long id : answer.keySet())
-            mapEvents.get(id).setViews(answer.get(id));
         return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
@@ -286,15 +288,17 @@ public class EventServiceImpl implements EventService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
         List<Event> events = eventRepository.searchEvents(users, states, categories, rangeStart, rangeEnd, pageable);
-        List<Long> ids = new ArrayList<>();
-        HashMap<Long, Event> mapEvents = new HashMap<>();
-        for (Event event : events) {
-            ids.add(event.getId());
-            mapEvents.put(event.getId(), event);
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
         }
-        Map<Long, Long> answer = statisticClient.getStats(ids);
-        for (Long id : answer.keySet())
-            mapEvents.get(id).setViews(answer.get(id));
         return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
@@ -341,16 +345,17 @@ public class EventServiceImpl implements EventService {
         if (rangeStart == null)
             rangeStart = LocalDateTime.now();
         List<Event> events = eventRepository.searchEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
-        List<Long> ids = new ArrayList<>();
-        HashMap<Long, Event> mapEvents = new HashMap<>();
-        for (Event event : events) {
-            ids.add(event.getId());
-            mapEvents.put(event.getId(), event);
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
         }
-        Map<Long, Long> answer = statisticClient.getStats(ids);
-        for (Long id : answer.keySet())
-            mapEvents.get(id).setViews(answer.get(id));
-
         if (sort != null) {
             switch (sort) {
                 case EVENT_DATE:

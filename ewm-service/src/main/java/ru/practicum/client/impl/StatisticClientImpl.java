@@ -69,6 +69,8 @@ public class StatisticClientImpl implements StatisticClient {
     @Override
     @SneakyThrows
     public Map<Long, Long> getStats(List<Long> eventIds) {
+        if (eventIds==null || eventIds.size() == 0)
+            return Collections.EMPTY_MAP;
         Map<String, String> data = new HashMap<>();
         data.put("start", "2023-01-10+11:30:35");
         data.put("end", "2050-01-01+12:00:00");
