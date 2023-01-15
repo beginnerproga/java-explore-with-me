@@ -7,6 +7,6 @@ import java.util.Map;
 public interface StatisticClient {
     void addEndpointHit(HttpServletRequest request);
 
-    Map<Long,Long> getStats(List<Long> eventIds);
+    Map<Long, Long> getStats(List<Long> eventIds);
 
 }

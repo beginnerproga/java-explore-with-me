@@ -74,7 +74,7 @@ public class StatisticClientImpl implements StatisticClient {
         data.put("end", "2050-01-01+12:00:00");
         StringBuilder uris = new StringBuilder();
         for (long eventId : eventIds) {
-            uris.append("/events/" + eventId + ",");
+            uris.append("/events/").append(eventId).append(",");
         }
         uris.deleteCharAt(uris.lastIndexOf(","));
 
@@ -91,7 +91,7 @@ public class StatisticClientImpl implements StatisticClient {
         JSONArray json = new JSONArray(response.body());
         HashMap<String, Long> answer = new HashMap<>();
         if (json.length() != 0) {
-            for (Long eventId : eventIds) {
+            for (Long ignored : eventIds) {
                 answer.put(json.getJSONObject(0).getString("uri"),
                         json.getJSONObject(0).getLong("hits"));
             }
