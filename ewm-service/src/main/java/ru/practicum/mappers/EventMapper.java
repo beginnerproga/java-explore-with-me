@@ -9,6 +9,7 @@ import ru.practicum.models.EventState;
 import ru.practicum.models.User;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class EventMapper {
     public static Event toEvent(EventDto eventDto, User initiator, Category category) {
@@ -20,11 +21,11 @@ public class EventMapper {
     public static EventInfoDto toEventInfoDto(Event event) {
         return new EventInfoDto(event.getAnnotation(), CategoryMapper.toCategoryDto(event.getCategory()), event.getConfirmedRequests(), event.getCreatedOn(), event.getDescription(),
                 event.getEventDate(), event.getId(), UserMapper.toUserDto(event.getInitiator()), event.getLocation(), event.getPaid(), event.getParticipantLimit(), event.getPublishedOn(),
-                event.getRequestModeration(), event.getState(), event.getTitle(), event.getViews());
+                event.getRequestModeration(), event.getState(), event.getTitle(), Optional.ofNullable(event.getViews()).orElse(0L));
     }
 
     public static EventShortInfoDto toEventShortInfoDto(Event event) {
         return new EventShortInfoDto(event.getId(), event.getTitle(), event.getAnnotation(), CategoryMapper.toCategoryDto(event.getCategory()), event.getConfirmedRequests(),
-                event.getEventDate(), UserMapper.toUserShortDto(event.getInitiator()), event.getPaid(), event.getViews());
+                event.getEventDate(), UserMapper.toUserShortDto(event.getInitiator()), event.getPaid(), Optional.ofNullable(event.getViews()).orElse(0L));
     }
 }

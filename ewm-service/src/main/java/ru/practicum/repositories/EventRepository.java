@@ -30,7 +30,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "AND((:paid) IS NULL OR e.paid = :paid)" +
             "AND ((:onlyAvailable) IS NULL OR ((:onlyAvailable = true) AND (e.confirmedRequests>=e.participantLimit or e.participantLimit = 0)) OR ((:onlyAvailable = false)))" +
             "AND ((CAST(:rangeStart as date) IS NULL) OR CAST(e.eventDate as date) > CAST(:rangeStart as date))" +
-            "AND ((CAST(:rangeEnd as date) IS NULL) OR CAST(e.eventDate as date) < CAST(:rangeEnd as date))")
+            "AND ((CAST(:rangeEnd as date) IS NULL) OR CAST(e.eventDate as date) < CAST(:rangeEnd as date)) ORDER BY e.id")
     List<Event> searchEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, Pageable pageable);
 
     Event findByIdAndStateOrderById(long eventId, EventState eventState);

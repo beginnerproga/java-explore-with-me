@@ -17,7 +17,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -66,11 +68,17 @@ public class StatisticClientImpl implements StatisticClient {
 
     @Override
     @SneakyThrows
-    public Long getStats(long eventId) {
+    public Map<Long, Long> getStats(List<Long> eventIds) {
         Map<String, String> data = new HashMap<>();
         data.put("start", "2023-01-10+11:30:35");
         data.put("end", "2050-01-01+12:00:00");
-        data.put("uris", "/events/" + eventId);
+        StringBuilder uris = new StringBuilder();
+        for (long eventId : eventIds) {
+            uris.append("/events/" + eventId + ",");
+        }
+        uris.deleteCharAt(uris.lastIndexOf(","));
+
+        data.put("uris", uris.toString());
         data.put("unique", "false");
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(url + "/stats" + toRequestParam(data)))
@@ -81,9 +89,19 @@ public class StatisticClientImpl implements StatisticClient {
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         JSONArray json = new JSONArray(response.body());
+        HashMap<String, Long> answer = new HashMap<>();
         if (json.length() != 0) {
-            return json.getJSONObject(0).getLong("hits");
-        } else return 0L;
+            for (Long eventId : eventIds) {
+                answer.put(json.getJSONObject(0).getString("uri"),
+                        json.getJSONObject(0).getLong("hits"));
+            }
+            Map<Long, Long> answerInLong = new HashMap<>();
+            for (String a : answer.keySet()) {
+                answerInLong.put(Long.parseLong(a.substring(8)), answer.get(a));
+            }
+            return answerInLong;
+        } else
+            return Collections.EMPTY_MAP;
     }
 
 }

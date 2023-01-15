@@ -30,8 +30,7 @@ import ru.practicum.servers.EventService;
 import javax.validation.ValidationException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,6 +91,7 @@ public class EventServiceImpl implements EventService {
         if (event.getRequestModeration() != null)
             result.setRequestModeration(event.getRequestModeration());
         eventRepository.save(result);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventDto.getId())).get(eventDto.getId())).orElse(0L));
         return EventMapper.toEventInfoDto(result);
     }
 
@@ -124,6 +124,7 @@ public class EventServiceImpl implements EventService {
         if (eventDto.getRequestModeration() != null)
             event.setRequestModeration(eventDto.getRequestModeration());
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -150,7 +151,17 @@ public class EventServiceImpl implements EventService {
         });
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.findAllByInitiatorOrderById(user, pageable).get().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
+        List<Event> events = eventRepository.findAllByInitiatorOrderById(user, pageable).getContent();
+        List<Long> ids = new ArrayList<>();
+        HashMap<Long, Event> mapEvents = new HashMap<>();
+        for (Event event : events) {
+            ids.add(event.getId());
+            mapEvents.put(event.getId(), event);
+        }
+        Map<Long, Long> answer = statisticClient.getStats(ids);
+        for (Long id : answer.keySet())
+            mapEvents.get(id).setViews(answer.get(id));
+        return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
     @Override
@@ -166,18 +177,17 @@ public class EventServiceImpl implements EventService {
         });
         if (!event.getInitiator().equals(user))
             throw new UserNotAccessException("User with id = " + userId + " is not owner");
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
     @Override
-    @Transactional
     public EventInfoDto getEventById(long eventId) {
         log.info("Received request to get event with event's id = {} from public controller", eventId);
         Event event = eventRepository.findByIdAndStateOrderById(eventId, EventState.PUBLISHED);
         if (event == null)
             throw new EventNotFoundException("Published event with id = " + eventId + " not found");
-        event.setViews(statisticClient.getStats(eventId));
-        eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -198,6 +208,7 @@ public class EventServiceImpl implements EventService {
         else
             throw new InappropriateStateForAction("Event's state is not PENDING");
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -275,6 +286,15 @@ public class EventServiceImpl implements EventService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
         List<Event> events = eventRepository.searchEvents(users, states, categories, rangeStart, rangeEnd, pageable);
+        List<Long> ids = new ArrayList<>();
+        HashMap<Long, Event> mapEvents = new HashMap<>();
+        for (Event event : events) {
+            ids.add(event.getId());
+            mapEvents.put(event.getId(), event);
+        }
+        Map<Long, Long> answer = statisticClient.getStats(ids);
+        for (Long id : answer.keySet())
+            mapEvents.get(id).setViews(answer.get(id));
         return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
@@ -293,6 +313,7 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PUBLISHED);
         event.setPublishedOn(LocalDateTime.now());
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -307,6 +328,7 @@ public class EventServiceImpl implements EventService {
             throw new InappropriateStateForAction("Event's state is published, error");
         event.setState(EventState.CANCELED);
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
 
     }
@@ -319,6 +341,16 @@ public class EventServiceImpl implements EventService {
         if (rangeStart == null)
             rangeStart = LocalDateTime.now();
         List<Event> events = eventRepository.searchEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+        List<Long> ids = new ArrayList<>();
+        HashMap<Long, Event> mapEvents = new HashMap<>();
+        for (Event event : events) {
+            ids.add(event.getId());
+            mapEvents.put(event.getId(), event);
+        }
+        Map<Long, Long> answer = statisticClient.getStats(ids);
+        for (Long id : answer.keySet())
+            mapEvents.get(id).setViews(answer.get(id));
+
         if (sort != null) {
             switch (sort) {
                 case EVENT_DATE:
@@ -333,7 +365,6 @@ public class EventServiceImpl implements EventService {
             }
         } else
             events.stream().sorted(Comparator.comparingLong(Event::getId)).collect(Collectors.toList());
-
         return events.stream().map(EventMapper::toEventShortInfoDto).collect(Collectors.toList());
     }
 
