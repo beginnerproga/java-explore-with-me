@@ -4,6 +4,7 @@ import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.info.EventInfoDto;
 import ru.practicum.info.EventShortInfoDto;
+import ru.practicum.info.LikeInfoDto;
 import ru.practicum.models.EventSort;
 import ru.practicum.models.EventState;
 
@@ -39,4 +40,7 @@ public interface EventService {
 
     List<EventShortInfoDto> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, EventSort sort, int from, int size);
 
+    LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive);
+
+    List<EventShortInfoDto> getEventsByRating(int count, boolean desc, boolean eventRating);
 }

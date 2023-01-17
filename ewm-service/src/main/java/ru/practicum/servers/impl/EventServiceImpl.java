@@ -11,6 +11,7 @@ import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.exceptions.InappropriateStateForAction;
+import ru.practicum.exceptions.LikeAlreadySetException;
 import ru.practicum.exceptions.UserNotAccessException;
 import ru.practicum.exceptions.exception404.CategoryNotFoundException;
 import ru.practicum.exceptions.exception404.EventNotFoundException;
@@ -18,16 +19,17 @@ import ru.practicum.exceptions.exception404.RequestNotFoundException;
 import ru.practicum.exceptions.exception404.UserNotFoundException;
 import ru.practicum.info.EventInfoDto;
 import ru.practicum.info.EventShortInfoDto;
+import ru.practicum.info.LikeInfoDto;
 import ru.practicum.mappers.EventMapper;
+import ru.practicum.mappers.LikeMapper;
 import ru.practicum.mappers.ParticipationRequestMapper;
 import ru.practicum.models.*;
-import ru.practicum.repositories.CategoryRepository;
-import ru.practicum.repositories.EventRepository;
-import ru.practicum.repositories.ParticipationRequestRepository;
-import ru.practicum.repositories.UserRepository;
+import ru.practicum.repositories.*;
 import ru.practicum.servers.EventService;
 
 import javax.validation.ValidationException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,16 +44,21 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final VisitRepository visitRepository;
+    private final LikeRepository likeRepository;
     private final StatisticClient statisticClient;
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository,
-                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository, StatisticClient statisticClient) {
+                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository,
+                            StatisticClient statisticClient, VisitRepository visitRepository, LikeRepository likeRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.participationRequestRepository = participationRequestRepository;
         this.statisticClient = statisticClient;
+        this.visitRepository = visitRepository;
+        this.likeRepository = likeRepository;
     }
 
     @Override
@@ -180,6 +187,8 @@ public class EventServiceImpl implements EventService {
         if (!event.getInitiator().equals(user))
             throw new UserNotAccessException("User with id = " + userId + " is not owner");
         event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
+        log.info("Add visit from user with id = {} to event with id ={}", userId, eventId);
+        visitRepository.save(new Visit(null, event, user));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -381,4 +390,75 @@ public class EventServiceImpl implements EventService {
         participationRequestRepository.saveAll(participationRequests);
     }
 
+    @Override
+    @Transactional
+    public LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive) {
+        log.info("Received request to add like to event with id = {} from user with id = {}", eventId, userId);
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            throw new UserNotFoundException("User with id = " + userId + " not found");
+        });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            throw new EventNotFoundException("Event with id = " + eventId + " not found");
+        });
+        if (!event.getState().equals(EventState.PUBLISHED))
+            throw new InappropriateStateForAction("Event should be published");
+        if (user.equals(event.getInitiator()))
+            throw new UserNotAccessException("User with id = " + userId + " is initiator of event");
+        if (visitRepository.findByEventAndUser(event, user) == null) {
+            throw new UserNotAccessException("User with id = " + userId +
+                    " doesn't visit the event with id = " + eventId);
+        }
+        if (likeRepository.findByUserAndEvent(user, event) != null)
+            throw new LikeAlreadySetException("User with id = " + userId + "already set like");
+        Like like = new Like(null, event, user, positive);
+        likeRepository.save(like);
+        long likesEvent = likeRepository.countAllByPositiveIsTrueAndEvent(event);
+        long dislikesEvent = likeRepository.countAllByPositiveIsFalseAndEvent(event);
+        float ratingEvent = calculateRating(likesEvent, dislikesEvent);
+        long likesUser = likeRepository.countAllByPositiveIsTrueAndEvent_Initiator(event.getInitiator());
+        long dislikesUser = likeRepository.countAllByPositiveIsFalseAndEvent_Initiator(event.getInitiator());
+        float ratingUser = calculateRating(likesUser, dislikesUser);
+        event.setRating(ratingEvent);
+        event.getInitiator().setRating(ratingUser);
+        eventRepository.save(event);
+        userRepository.save(event.getInitiator());
+        return LikeMapper.toLikeInfoDto(like);
+    }
+
+    @Override
+    public List<EventShortInfoDto> getEventsByRating(int count, boolean desc, boolean eventRating) {
+        log.info("Received request to get events by rating");
+        List<Event> events;
+        Pageable page = PageRequest.of(0, count);
+        if (eventRating) {
+            if (desc)
+                events = eventRepository.findTopCountByOrderByRatingEventDesc(page);
+            else
+                events = eventRepository.findTopCountByOrderByRatingEventAsc(page);
+        } else {
+            if (desc)
+                events = eventRepository.findTopCountByOrderByRatingUserDesc(page);
+            else
+                events = eventRepository.findTopCountByOrderByRatingUserAsc(page);
+        }
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
+        }
+        return events.stream().map(EventMapper::toEventShortInfoDto).collect(Collectors.toList());
+    }
+
+
+    public Float calculateRating(Long likes, Long dislikes) {
+        Float rating = ((likes.floatValue() - dislikes) / (likes.floatValue() + dislikes));
+        rating = (new BigDecimal(rating)).setScale(2, RoundingMode.HALF_UP).floatValue();
+        return rating;
+    }
 }

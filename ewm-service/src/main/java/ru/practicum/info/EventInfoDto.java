@@ -44,4 +44,6 @@ public class EventInfoDto {
     private String title;
     @PositiveOrZero
     private Long views;
+    @PositiveOrZero
+    private Float rating;
 }

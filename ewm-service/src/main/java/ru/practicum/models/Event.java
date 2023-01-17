@@ -52,4 +52,6 @@ public class Event {
     private String title;
     @Transient
     private Long views;
+    @Column(name = "rating", nullable = false)
+    private Float rating;
 }
