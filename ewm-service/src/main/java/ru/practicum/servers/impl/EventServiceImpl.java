@@ -457,7 +457,7 @@ public class EventServiceImpl implements EventService {
 
 
     public Float calculateRating(Long likes, Long dislikes) {
-        Float rating = ((likes.floatValue() - dislikes) / (likes.floatValue() + dislikes));
+        float rating = ((likes.floatValue() - dislikes) / (likes.floatValue() + dislikes));
         rating = (new BigDecimal(rating)).setScale(2, RoundingMode.HALF_UP).floatValue();
         return rating;
     }
