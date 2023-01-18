@@ -16,19 +16,14 @@ import java.util.List;
 public class Compilation {
     @ManyToMany
     @JoinTable(name = "compilations_events",
-            joinColumns = {@JoinColumn(name = "compilation_id")},
-            inverseJoinColumns = {@JoinColumn(name = "event_id")})
-    private List<Event> events;
+            joinColumns = {@JoinColumn(name = "compilation_id", nullable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "event_id", nullable = false)})
+    private List<Event> events = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
-    @Column(name = "pinned")
+    @Column(name = "pinned", nullable = false)
     private Boolean pinned;
-
-    {
-        events = new ArrayList<>();
-    }
-
 }

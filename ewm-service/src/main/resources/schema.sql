@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS events
     request_moderation BOOLEAN,
     state              CHARACTER VARYING(15),
     title              CHARACTER VARYING(500),
-    views              BIGINT,
     category_id        INTEGER                                 NOT NULL,
     CONSTRAINT PK_EVENTS PRIMARY KEY (id),
     CONSTRAINT FK_EVENTS_CATEGORIES FOREIGN KEY (category_id)
@@ -50,7 +49,8 @@ CREATE TABLE IF NOT EXISTS requests
     CONSTRAINT FK_REQUESTS_EVENTS FOREIGN KEY (event_id)
         references events (id) ON DELETE CASCADE,
     CONSTRAINT FK_REQUESTS_USERS FOREIGN KEY (requester_id)
-        references users (id) ON DELETE CASCADE
+        references users (id) ON DELETE CASCADE,
+    CONSTRAINT UQ_PARTICIPANT_PER_EVENT UNIQUE (requester_id, event_id)
 );
 
 CREATE TABLE IF NOT EXISTS compilations
@@ -67,5 +67,6 @@ CREATE TABLE IF NOT EXISTS compilations_events
     CONSTRAINT FK_COMPILATIONS_EVENTS FOREIGN KEY (event_id)
         references events (id),
     CONSTRAINT FK_EVENTS_COMPILATIONS FOREIGN KEY (compilation_id)
-        references compilations (id)
+        references compilations (id),
+    CONSTRAINT pk_compilation_of_events PRIMARY KEY (compilation_id, event_id)
 );

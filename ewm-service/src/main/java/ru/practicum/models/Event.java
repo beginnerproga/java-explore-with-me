@@ -16,10 +16,10 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "annotation")
+    @Column(name = "annotation", nullable = false)
     private String annotation;
-    @OneToOne
-    @JoinColumn(name = "category_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     @Column(name = "confirmed_requests")
     private Long confirmedRequests;
@@ -27,19 +27,19 @@ public class Event {
     private LocalDateTime createdOn;
     @Column(name = "description")
     private String description;
-    @Column(name = "event_date")
+    @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
-    @OneToOne
-    @JoinColumn(name = "initiator_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "lat", column = @Column(name = "lat")),
-            @AttributeOverride(name = "lon", column = @Column(name = "lon"))})
+            @AttributeOverride(name = "lat", column = @Column(name = "lat", nullable = false)),
+            @AttributeOverride(name = "lon", column = @Column(name = "lon", nullable = false))})
     private Location location;
-    @Column(name = "paid")
+    @Column(name = "paid", nullable = false)
     private Boolean paid;
-    @Column(name = "participant_limit")
+    @Column(name = "participant_limit", nullable = false)
     private Long participantLimit;
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
@@ -50,7 +50,6 @@ public class Event {
     private EventState state;//Список состояний жизненного цикла события
     @Column(name = "title")
     private String title;
-    @Column(name = "views")
+    @Transient
     private Long views;
-
 }

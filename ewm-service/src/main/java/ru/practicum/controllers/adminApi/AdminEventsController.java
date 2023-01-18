@@ -47,6 +47,7 @@ public class AdminEventsController {
     @PatchMapping("/{eventId}/publish")
     public EventInfoDto publishEvent(@PathVariable long eventId) {
         return eventService.publishEvent(eventId);
+
     }
 
     @PatchMapping("/{eventId}/reject")

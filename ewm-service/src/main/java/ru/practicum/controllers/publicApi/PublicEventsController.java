@@ -55,6 +55,4 @@ public class PublicEventsController {
         statisticClient.addEndpointHit(request);
         return eventService.getEventById(eventId);
     }
-
-
 }

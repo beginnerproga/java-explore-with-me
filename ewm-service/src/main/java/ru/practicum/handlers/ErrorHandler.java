@@ -59,7 +59,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(value = {InitiatorSendRequestException.class,
-            UserNotAccessException.class})
+            UserNotAccessException.class, LikeAlreadySetException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<ErrorResponse> handleForbiddenException(final RuntimeException e) {
         log.error("403 {}", e.getMessage(), e);

@@ -68,6 +68,5 @@ public class PrivateEventsController {
     public ParticipationRequestDto rejectRequestByRequestId(@PathVariable long userId, @PathVariable long eventId, @PathVariable(name = "reqId") long requestId) {
         return eventService.rejectRequestByRequestId(userId, eventId, requestId);
     }
-
 }
 

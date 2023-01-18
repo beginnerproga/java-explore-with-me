@@ -66,8 +66,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Received request to delete event with event's id = {} from compilation with compilation's id = {}", eventId, compId);
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new CompilationNotFoundException("Compilation with id = " + compId + " not found"));
-        Event event = eventRepository.findById(eventId).
-                orElseThrow(() -> {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                     throw new EventNotFoundException("Event with id = " + eventId + " not found");
                 });
         compilation.getEvents().remove(event);
@@ -81,8 +80,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("Received request to add event with event's id = {} to compilation with compilation's id = {}", eventId, compId);
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new CompilationNotFoundException("Compilation with id = " + compId + " not found"));
-        Event event = eventRepository.findById(eventId).
-                orElseThrow(() -> {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                     throw new EventNotFoundException("Event with id = " + eventId + " not found");
                 });
         compilation.getEvents().add(event);

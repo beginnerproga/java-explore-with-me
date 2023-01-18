@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatisticClient;
 import ru.practicum.dto.EventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.exceptions.InappropriateStateForAction;
@@ -29,8 +30,7 @@ import ru.practicum.servers.EventService;
 import javax.validation.ValidationException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,13 +42,16 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final StatisticClient statisticClient;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository) {
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository,
+                            CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository, StatisticClient statisticClient) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.participationRequestRepository = participationRequestRepository;
+        this.statisticClient = statisticClient;
     }
 
     @Override
@@ -60,8 +63,7 @@ public class EventServiceImpl implements EventService {
         });
         Category category = null;
         if (eventDto.getCategoryId() != null && eventDto.getCategoryId() != 0)
-            category = categoryRepository.findById(eventDto.getCategoryId()).orElseThrow(() ->
-            {
+            category = categoryRepository.findById(eventDto.getCategoryId()).orElseThrow(() -> {
                 throw new CategoryNotFoundException("Category with id = " + eventDto.getCategoryId() + " not found");
             });
         Event event = EventMapper.toEvent(eventDto, user, category);
@@ -89,6 +91,7 @@ public class EventServiceImpl implements EventService {
         if (event.getRequestModeration() != null)
             result.setRequestModeration(event.getRequestModeration());
         eventRepository.save(result);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventDto.getId())).get(eventDto.getId())).orElse(0L));
         return EventMapper.toEventInfoDto(result);
     }
 
@@ -121,6 +124,7 @@ public class EventServiceImpl implements EventService {
         if (eventDto.getRequestModeration() != null)
             event.setRequestModeration(eventDto.getRequestModeration());
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -147,10 +151,23 @@ public class EventServiceImpl implements EventService {
         });
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.findAllByInitiatorOrderById(user, pageable).get().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
+        List<Event> events = eventRepository.findAllByInitiatorOrderById(user, pageable).getContent();
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
+        }
+        return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public EventInfoDto getEventById(long userId, long eventId) {
         log.info("Received request to get event with event's id = {} by user with user's id = {}", eventId, userId);
         User user = userRepository.findById(userId).orElseThrow(() -> {
@@ -162,18 +179,17 @@ public class EventServiceImpl implements EventService {
         });
         if (!event.getInitiator().equals(user))
             throw new UserNotAccessException("User with id = " + userId + " is not owner");
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
     @Override
-    @Transactional
     public EventInfoDto getEventById(long eventId) {
-        log.info("Received request to get event with event's id = {} from public controller");
+        log.info("Received request to get event with event's id = {} from public controller", eventId);
         Event event = eventRepository.findByIdAndStateOrderById(eventId, EventState.PUBLISHED);
         if (event == null)
             throw new EventNotFoundException("Published event with id = " + eventId + " not found");
-        event.setViews(event.getViews() + 1);
-        eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -194,6 +210,7 @@ public class EventServiceImpl implements EventService {
         else
             throw new InappropriateStateForAction("Event's state is not PENDING");
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -271,6 +288,17 @@ public class EventServiceImpl implements EventService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
         List<Event> events = eventRepository.searchEvents(users, states, categories, rangeStart, rangeEnd, pageable);
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
+        }
         return events.stream().map(EventMapper::toEventInfoDto).collect(Collectors.toList());
     }
 
@@ -289,6 +317,7 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PUBLISHED);
         event.setPublishedOn(LocalDateTime.now());
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -303,6 +332,7 @@ public class EventServiceImpl implements EventService {
             throw new InappropriateStateForAction("Event's state is published, error");
         event.setState(EventState.CANCELED);
         eventRepository.save(event);
+        event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
         return EventMapper.toEventInfoDto(event);
 
     }
@@ -315,6 +345,17 @@ public class EventServiceImpl implements EventService {
         if (rangeStart == null)
             rangeStart = LocalDateTime.now();
         List<Event> events = eventRepository.searchEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable);
+        if (events.size() != 0) {
+            List<Long> ids = new ArrayList<>();
+            HashMap<Long, Event> mapEvents = new HashMap<>();
+            for (Event event : events) {
+                ids.add(event.getId());
+                mapEvents.put(event.getId(), event);
+            }
+            Map<Long, Long> answer = statisticClient.getStats(ids);
+            for (Long id : answer.keySet())
+                mapEvents.get(id).setViews(answer.get(id));
+        }
         if (sort != null) {
             switch (sort) {
                 case EVENT_DATE:
@@ -323,14 +364,15 @@ public class EventServiceImpl implements EventService {
                             .collect(Collectors.toList());
                     break;
                 case VIEWS:
-                    events = events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed()).
-                            collect(Collectors.toList());
+                    events = events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed())
+                            .collect(Collectors.toList());
                     break;
             }
         } else
             events.stream().sorted(Comparator.comparingLong(Event::getId)).collect(Collectors.toList());
         return events.stream().map(EventMapper::toEventShortInfoDto).collect(Collectors.toList());
     }
+
 
     @Transactional
     public void rejectAllPendingParticipationRequestsOfEvent(long eventId) {
