@@ -284,8 +284,8 @@
               "});\r",
               "pm.test(\"Test get event\", function () {\r",
               "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData.id).to.eql(3);\r",
-              "    pm.expect(jsonData.rating).to.eql(0.33);    \r",
+              "    pm.expect(jsonData[0].id).to.eql(3);\r",
+              "    pm.expect(jsonData[0].rating).to.eql(0.33);    \r",
               "});"
             ],
             "type": "text/javascript"
