@@ -8,6 +8,7 @@ import ru.practicum.info.LikeInfoDto;
 import ru.practicum.models.EventSort;
 import ru.practicum.models.EventState;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public interface EventService {
 
     List<EventShortInfoDto> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable, EventSort sort, int from, int size);
 
-    LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive);
+    LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive, HttpServletRequest request);
 
     List<EventShortInfoDto> getEventsByRating(int count, boolean desc, boolean eventRating);
 }

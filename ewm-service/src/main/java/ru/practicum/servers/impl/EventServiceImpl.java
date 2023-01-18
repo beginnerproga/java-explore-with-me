@@ -27,6 +27,7 @@ import ru.practicum.models.*;
 import ru.practicum.repositories.*;
 import ru.practicum.servers.EventService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,20 +45,18 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository participationRequestRepository;
-    private final VisitRepository visitRepository;
     private final LikeRepository likeRepository;
     private final StatisticClient statisticClient;
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository,
                             CategoryRepository categoryRepository, ParticipationRequestRepository participationRequestRepository,
-                            StatisticClient statisticClient, VisitRepository visitRepository, LikeRepository likeRepository) {
+                            StatisticClient statisticClient, LikeRepository likeRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.participationRequestRepository = participationRequestRepository;
         this.statisticClient = statisticClient;
-        this.visitRepository = visitRepository;
         this.likeRepository = likeRepository;
     }
 
@@ -187,8 +186,6 @@ public class EventServiceImpl implements EventService {
         if (!event.getInitiator().equals(user))
             throw new UserNotAccessException("User with id = " + userId + " is not owner");
         event.setViews(Optional.ofNullable(statisticClient.getStats(List.of(eventId)).get(eventId)).orElse(0L));
-        log.info("Add visit from user with id = {} to event with id ={}", userId, eventId);
-        visitRepository.save(new Visit(null, event, user));
         return EventMapper.toEventInfoDto(event);
     }
 
@@ -392,7 +389,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive) {
+    public LikeInfoDto addLikeToEvent(long userId, long eventId, boolean positive, HttpServletRequest request) {
         log.info("Received request to add like to event with id = {} from user with id = {}", eventId, userId);
         User user = userRepository.findById(userId).orElseThrow(() -> {
             throw new UserNotFoundException("User with id = " + userId + " not found");
@@ -404,11 +401,14 @@ public class EventServiceImpl implements EventService {
             throw new InappropriateStateForAction("Event should be published");
         if (user.equals(event.getInitiator()))
             throw new UserNotAccessException("User with id = " + userId + " is initiator of event");
-        if (visitRepository.findByEventAndUser(event, user) == null) {
+        try {
+            statisticClient.findStatsByEventAndUri("/events/" + eventId, request.getRemoteAddr());
+        } catch (Exception e) {
             throw new UserNotAccessException("User with id = " + userId +
                     " doesn't visit the event with id = " + eventId);
         }
-        if (likeRepository.findByUserAndEvent(user, event) != null)
+        Like test = likeRepository.findByUserAndEvent(user, event);
+        if (test != null && test.getPositive().equals(positive))
             throw new LikeAlreadySetException("User with id = " + userId + "already set like");
         Like like = new Like(null, event, user, positive);
         likeRepository.save(like);

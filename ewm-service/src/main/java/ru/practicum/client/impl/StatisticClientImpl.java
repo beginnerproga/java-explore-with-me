@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.practicum.client.Hit;
@@ -104,6 +105,26 @@ public class StatisticClientImpl implements StatisticClient {
             return answerInLong;
         } else
             return Collections.EMPTY_MAP;
+    }
+
+    @Override
+    @SneakyThrows
+    public Boolean findStatsByEventAndUri(String uri, String ip) {
+        Map<String, String> data = new HashMap<>();
+        data.put("uri", uri);
+        data.put("ip", ip);
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(url + "/stats/ip" + toRequestParam(data)))
+                .GET()
+                .header("Accept", "application/json")
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        JSONObject json = new JSONObject(response.body());
+        if (json != null && json.length() != 0)
+            return true;
+        return false;
     }
 
 }

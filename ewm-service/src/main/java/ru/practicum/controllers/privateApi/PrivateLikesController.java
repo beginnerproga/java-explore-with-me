@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.info.LikeInfoDto;
 import ru.practicum.servers.EventService;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping(path = "/users/{userId}/events/{eventId}")
 public class PrivateLikesController {
@@ -20,12 +22,12 @@ public class PrivateLikesController {
     }
 
     @PostMapping("/like")
-    public LikeInfoDto addLikeToEvent(@PathVariable long userId, @PathVariable long eventId) {
-        return eventService.addLikeToEvent(userId, eventId, true);
+    public LikeInfoDto addLikeToEvent(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest request) {
+        return eventService.addLikeToEvent(userId, eventId, true, request);
     }
 
     @PostMapping("/dislike")
-    public LikeInfoDto addDislikeToEvent(@PathVariable long userId, @PathVariable long eventId) {
-        return eventService.addLikeToEvent(userId, eventId, false);
+    public LikeInfoDto addDislikeToEvent(@PathVariable long userId, @PathVariable long eventId, HttpServletRequest request) {
+        return eventService.addLikeToEvent(userId, eventId, false, request);
     }
 }

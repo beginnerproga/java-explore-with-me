@@ -10,4 +10,5 @@ public interface StatisticServer {
 
     List<ViewStats> getStats(String start, String end, List<String> uris, boolean unique);
 
+    ViewStats getStatsByUriAndIp(String uri, String ip);
 }

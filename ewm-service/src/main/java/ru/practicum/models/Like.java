@@ -22,7 +22,7 @@ public class Like {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
-    @Column(name = "is_positive", nullable = false)
+    @Column(name = "is_like", nullable = false)
     private Boolean positive;
 
 }
