@@ -13,16 +13,19 @@
           "listen": "prerequest",
           "script": {
             "exec": [
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
               "pm.test(\"Ответ должен содержать код статуса 403 и данные в формате json\", function () {\r",
-              "    pm.response.to.be.forbidden;    \r",
+              "    pm.response.to.have.status(403);\r",
               "    pm.response.to.be.withBody;\r",
               "    pm.response.to.be.json;\r",
-              "});\r",
-              "\r",
-              "const target = pm.response.json();\r",
-              "\r",
-              "pm.test(\"Ошибка должна содержать поля: status\", function () {\r",
-              "    pm.expect(target).to.have.property('status');\r",
               "});"
             ],
             "type": "text/javascript"
@@ -205,7 +208,7 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/users/4/events/1/like",
+          "raw": "http://localhost:8080/users/5/events/1/dislike",
           "protocol": "http",
           "host": [
             "localhost"
@@ -213,10 +216,10 @@
           "port": "8080",
           "path": [
             "users",
-            "4",
+            "5",
             "events",
             "1",
-            "like"
+            "dislike"
           ]
         }
       },
@@ -224,17 +227,83 @@
     },
     {
       "name": "check rating event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200,201]);\r",
+              "});\r",
+              "pm.test(\"Test get event\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.id).to.eql(1);\r",
+              "    pm.expect(jsonData.rating).to.eql(0.33);    \r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
-        "header": []
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/events/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "events",
+            "1"
+          ]
+        }
       },
       "response": []
     },
     {
       "name": "check rating user",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200,201]);\r",
+              "});\r",
+              "pm.test(\"Test get event\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.id).to.eql(3);\r",
+              "    pm.expect(jsonData.rating).to.eql(0.33);    \r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
-        "header": []
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/admin/users?ids=3",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "admin",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "ids",
+              "value": "3"
+            }
+          ]
+        }
       },
       "response": []
     },
@@ -242,7 +311,26 @@
       "name": "New Request",
       "request": {
         "method": "GET",
-        "header": []
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/events/event_rating/top?desc=true",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "events",
+            "event_rating",
+            "top"
+          ],
+          "query": [
+            {
+              "key": "desc",
+              "value": "true"
+            }
+          ]
+        }
       },
       "response": []
     }
