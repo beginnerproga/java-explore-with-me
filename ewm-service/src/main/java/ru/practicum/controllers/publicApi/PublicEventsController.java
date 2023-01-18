@@ -58,13 +58,17 @@ public class PublicEventsController {
 
     @GetMapping("/event_rating/top")
     public List<EventShortInfoDto> getEventsByEventRatingOfEvent(@RequestParam(required = false, defaultValue = "15") @Positive int count,
-                                                                 @RequestParam(required = false, defaultValue = "true") boolean desc) {
+                                                                 @RequestParam(required = false, defaultValue = "true") boolean desc,
+                                                                 HttpServletRequest request) {
+        statisticClient.addEndpointHit(request);
         return eventService.getEventsByRating(count, desc, true);
     }
 
     @GetMapping("/user_rating/top")
     public List<EventShortInfoDto> getEventsByUserRatingOfEvent(@RequestParam(required = false, defaultValue = "15") @Positive int count,
-                                                                @RequestParam(required = false, defaultValue = "true") boolean desc) {
+                                                                @RequestParam(required = false, defaultValue = "true") boolean desc,
+                                                                HttpServletRequest request) {
+        statisticClient.addEndpointHit(request);
         return eventService.getEventsByRating(count, desc, false);
     }
 
