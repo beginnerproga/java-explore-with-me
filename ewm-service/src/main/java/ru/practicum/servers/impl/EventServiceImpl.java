@@ -412,16 +412,22 @@ public class EventServiceImpl implements EventService {
             throw new LikeAlreadySetException("User with id = " + userId + "already set like");
         Like like = new Like(null, event, user, positive);
         likeRepository.save(like);
-        long likesEvent = likeRepository.countAllByPositiveIsTrueAndEvent(event);
-        long dislikesEvent = likeRepository.countAllByPositiveIsFalseAndEvent(event);
-        float ratingEvent = calculateRating(likesEvent, dislikesEvent);
-        long likesUser = likeRepository.countAllByPositiveIsTrueAndEvent_Initiator(event.getInitiator());
-        long dislikesUser = likeRepository.countAllByPositiveIsFalseAndEvent_Initiator(event.getInitiator());
-        float ratingUser = calculateRating(likesUser, dislikesUser);
-        event.setRating(ratingEvent);
-        event.getInitiator().setRating(ratingUser);
-        eventRepository.save(event);
-        userRepository.save(event.getInitiator());
+        long lazyLoad = 30; //отложенный подсчет рейтинга
+        long likes = likeRepository.countAllByEvent(event);
+        if(likes > lazyLoad*15)
+            lazyLoad = lazyLoad*2;
+        if (likes < lazyLoad || likes % (lazyLoad/2) == 0) {
+            long likesEvent = likeRepository.countAllByPositiveIsTrueAndEvent(event);
+            long dislikesEvent = likeRepository.countAllByPositiveIsFalseAndEvent(event);
+            float ratingEvent = calculateRating(likesEvent, dislikesEvent);
+            long likesUser = likeRepository.countAllByPositiveIsTrueAndEvent_Initiator(event.getInitiator());
+            long dislikesUser = likeRepository.countAllByPositiveIsFalseAndEvent_Initiator(event.getInitiator());
+            float ratingUser = calculateRating(likesUser, dislikesUser);
+            event.setRating(ratingEvent);
+            event.getInitiator().setRating(ratingUser);
+            eventRepository.save(event);
+            userRepository.save(event.getInitiator());
+        }
         return LikeMapper.toLikeInfoDto(like);
     }
 

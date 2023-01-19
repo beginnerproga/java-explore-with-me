@@ -8,6 +8,8 @@ import ru.practicum.models.User;
 public interface LikeRepository extends JpaRepository<Like, Long> {
     Like findByUserAndEvent(User user, Event event);
 
+    Long countAllByEvent(Event event);
+
     Long countAllByPositiveIsTrueAndEvent(Event event);
 
     Long countAllByPositiveIsFalseAndEvent(Event event);

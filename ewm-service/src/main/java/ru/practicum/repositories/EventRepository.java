@@ -39,7 +39,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e from Event as e WHERE e.state = 'PUBLISHED' ORDER BY e.rating DESC, e.initiator.rating DESC ")
     List<Event> findTopCountByOrderByRatingEventDesc(Pageable pageable);
 
-    @Query("SELECT e from Event as e WHERE e.state = 'PUBLISHED' ORDER BY e.rating DESC, e.initiator.rating DESC ")
+    @Query("SELECT e from Event as e WHERE e.state = 'PUBLISHED' ORDER BY e.rating ASC, e.initiator.rating DESC ")
     List<Event> findTopCountByOrderByRatingEventAsc(Pageable pageable);
 
     @Query("SELECT e from Event as e WHERE e.state = 'PUBLISHED' ORDER BY e.initiator.rating DESC, e.rating DESC ")
