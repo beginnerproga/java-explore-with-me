@@ -1,16 +1,19 @@
 package ru.practicum.models;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "compilations", schema = "public")
 public class Compilation {
@@ -26,4 +29,17 @@ public class Compilation {
     private String title;
     @Column(name = "pinned", nullable = false)
     private Boolean pinned;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Compilation)) return false;
+        Compilation that = (Compilation) o;
+        return events.equals(that.events) && Objects.equals(id, that.id) && title.equals(that.title) && pinned.equals(that.pinned);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(events, id, title, pinned);
+    }
 }

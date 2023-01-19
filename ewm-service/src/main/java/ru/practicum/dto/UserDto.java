@@ -25,5 +25,6 @@ public class UserDto {
     @Email(groups = {Create.class})
     @Size(min = 5, max = 200, groups = {Create.class, Update.class})
     private String email;
+    private Float rating;
 
 }

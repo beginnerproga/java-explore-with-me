@@ -35,4 +35,10 @@ public class StatisticController {
         return statisticServer.getStats(start, end, uris, unique);
     }
 
+    @GetMapping("/stats/ip")
+    public ViewStats getEndpointHitsByApi(@RequestParam(name = "ip") String ip,
+                                          @RequestParam(name = "uri") String uri) {
+        return statisticServer.getStatsByUriAndIp(uri, ip);
+    }
+
 }

@@ -9,4 +9,5 @@ public interface StatisticClient {
 
     Map<Long, Long> getStats(List<Long> eventIds);
 
+    Boolean findStatsByEventAndUri(String uri, String ip);
 }

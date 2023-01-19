@@ -45,4 +45,11 @@ public class StatisticServerImpl implements StatisticServer {
 
     }
 
+    @Override
+    public ViewStats getStatsByUriAndIp(String uri, String ip) {
+        log.info("Received request to get stats by uri and ip");
+        return endpointHitRepository.findAllUniqueByUriAndIp(uri, ip);
+    }
+
+
 }

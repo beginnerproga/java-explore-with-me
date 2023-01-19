@@ -14,6 +14,7 @@ import ru.practicum.controllers.adminApi.AdminCompilationsController;
 import ru.practicum.controllers.adminApi.AdminEventsController;
 import ru.practicum.controllers.adminApi.AdminUsersController;
 import ru.practicum.controllers.privateApi.PrivateEventsController;
+import ru.practicum.controllers.privateApi.PrivateLikesController;
 import ru.practicum.controllers.privateApi.PrivateParticipationRequestsController;
 import ru.practicum.controllers.publicApi.PublicCategoriesController;
 import ru.practicum.controllers.publicApi.PublicCompilationsController;
@@ -30,7 +31,7 @@ import java.io.StringWriter;
 @Slf4j
 @RestControllerAdvice(assignableTypes = {AdminUsersController.class, AdminCategoriesController.class, AdminCompilationsController.class,
         AdminEventsController.class, PrivateEventsController.class, PrivateParticipationRequestsController.class, PublicCategoriesController.class,
-        PublicCompilationsController.class, PublicEventsController.class})
+        PublicCompilationsController.class, PublicEventsController.class, PrivateLikesController.class})
 public class ErrorHandler {
 
     @ExceptionHandler(value = {RepeatedRequestException.class, SameEmailException.class,
