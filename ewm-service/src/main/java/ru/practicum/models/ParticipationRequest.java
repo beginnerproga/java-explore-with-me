@@ -1,13 +1,16 @@
 package ru.practicum.models;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "requests", schema = "public")
 @NoArgsConstructor
@@ -29,4 +32,16 @@ public class ParticipationRequest {
     @Column(name = "status", nullable = false)
     private RequestStatus status;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ParticipationRequest)) return false;
+        ParticipationRequest that = (ParticipationRequest) o;
+        return Objects.equals(id, that.id) && requester.equals(that.requester) && event.equals(that.event) && created.equals(that.created) && status == that.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, requester, event, created, status);
+    }
 }

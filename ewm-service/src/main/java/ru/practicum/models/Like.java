@@ -2,12 +2,15 @@ package ru.practicum.models;
 
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -25,6 +28,18 @@ public class Like {
     @Column(name = "is_like", nullable = false)
     private Boolean positive;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Like)) return false;
+        Like like = (Like) o;
+        return Objects.equals(id, like.id) && event.equals(like.event) && user.equals(like.user) && positive.equals(like.positive);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, event, user, positive);
+    }
 }
 
 

@@ -1,15 +1,18 @@
 package ru.practicum.models;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "events", schema = "public")
 public class Event {
@@ -54,4 +57,17 @@ public class Event {
     private Long views;
     @Column(name = "rating", nullable = false)
     private Float rating;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Event)) return false;
+        Event event = (Event) o;
+        return Objects.equals(id, event.id) && annotation.equals(event.annotation) && category.equals(event.category) && Objects.equals(confirmedRequests, event.confirmedRequests) && createdOn.equals(event.createdOn) && Objects.equals(description, event.description) && eventDate.equals(event.eventDate) && initiator.equals(event.initiator) && location.equals(event.location) && paid.equals(event.paid) && Objects.equals(participantLimit, event.participantLimit) && Objects.equals(publishedOn, event.publishedOn) && Objects.equals(requestModeration, event.requestModeration) && state == event.state && Objects.equals(title, event.title) && Objects.equals(views, event.views) && rating.equals(event.rating);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, annotation, category, confirmedRequests, createdOn, description, eventDate, initiator, location, paid, participantLimit, publishedOn, requestModeration, state, title, views, rating);
+    }
 }
