@@ -414,9 +414,9 @@ public class EventServiceImpl implements EventService {
         likeRepository.save(like);
         long lazyLoad = 30; //отложенный подсчет рейтинга
         long likes = likeRepository.countAllByEvent(event);
-        if(likes > lazyLoad*15)
-            lazyLoad = lazyLoad*2;
-        if (likes < lazyLoad || likes % (lazyLoad/2) == 0) {
+        if (likes > lazyLoad * 15)
+            lazyLoad = lazyLoad * 2;
+        if (likes < lazyLoad || likes % (lazyLoad / 2) == 0) {
             long likesEvent = likeRepository.countAllByPositiveIsTrueAndEvent(event);
             long dislikesEvent = likeRepository.countAllByPositiveIsFalseAndEvent(event);
             float ratingEvent = calculateRating(likesEvent, dislikesEvent);
